@@ -1,0 +1,80 @@
+<html>
+<head>
+<script src="ethereumjs-tx-1.3.3.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js" integrity="sha256-nWBTbvxhJgjslRyuAKJHK+XcZPlCnmIAAMixz6EefVk=" crossorigin="anonymous"></script>
+
+<title>Decode and Publish Waves Raw Transaction</title>
+</head>
+<body>
+<script type="text/javascript">
+function decodeMyTx() {
+    var serializedTx = document.getElementById("inputarea").value.trim();
+    var outputtext = ''
+    try {
+      const rawTx = decodeTx(serializedTx)
+      outputtext = JSON.stringify(rawTx, null, "  ");
+    } catch (err) {
+      outputtext = `Decode Error: ${err.toString()}`
+    }
+    document.getElementById("outputarea").value = outputtext
+}
+async function publishMyTx() {
+  var serializedTx = document.getElementById("inputarea").value.trim();
+  var outputtext = ''
+  try {
+    const result = await publishTx(serializedTx)
+      .on('transactionHash', hash => console.log('tx hash', hash))
+    console.log('result', result)
+    outputtext = result.toString()
+  } catch (err) {
+    outputtext = `Publish Error: ${err.toString()}`
+  }
+  document.getElementById("outputarea").value = outputtext
+}
+function publishTx(hex) {
+  return web3.eth.sendSignedTransaction(hex)
+}
+function decodeTx(hex) {
+  var tx = new ethereumjs.Tx(hex);
+  console.log('tx', tx)
+  var rawTx = {
+      nonce: parseInt(tx.nonce.toString('hex'),16),
+      gasPrice: parseInt(tx.gasPrice.toString('hex'),16),
+      gasLimit: parseInt(tx.gasLimit.toString('hex'),16),
+      to: '0x'+tx.to.toString('hex'),
+      value: parseInt(tx.value.toString('hex'), 16),
+      data: tx.data.toString('hex'),
+  };
+  if (tx.r.length) {
+    rawTx = {
+      ...rawTx,
+      from: '0x'+tx.from.toString('hex'),
+      r: tx.r.toString('hex'),
+      v: tx.v.toString('hex'),
+      s: tx.s.toString('hex'),
+    }
+  }
+  return rawTx
+}
+window.onload = () => {
+  
+}
+</script>
+<h1>Decode Waves serialized transaction</h1>
+<textarea name="inputarea" id="inputarea"  cols="100" rows="10">
+    '{"amount":100000000,"assetId":"","attachment":"CH3j8cnADvLRSemL7aTLFHokjuQKP4sondptM","feeAssetId":"","recipient":"3MvgqcdKFrgrNjEbgtsV42Jd3KnkgkywWJY","chainId":84,"fee":100000,"proofs":["5xVRNhLxMv7RJFmU2L2hmDEzdVxLevRGGVREypUqRvhN6MvUU9jcuyW7M1t6TfJQ3ik1NNtMw6Csv3h6u9Grohk5"],"senderPublicKey":"6EYoH7Hvv33ZPq2jshxwt8G7vFSDfCmS6cooWeMyNMmq","signature":"5xVRNhLxMv7RJFmU2L2hmDEzdVxLevRGGVREypUqRvhN6MvUU9jcuyW7M1t6TfJQ3ik1NNtMw6Csv3h6u9Grohk5","timestamp":1567890688235,"type":4,"version":2}'
+</textarea>
+<br />
+<input type="submit" value="Decode" onclick="decodeMyTx()"/>
+<input type="submit" value="Publish" onclick="publishMyTx()"/>
+<br />
+<textarea name="outputarea" id="outputarea"  cols="100" rows="20">
+</textarea>
+<br />
+<a href="https://github.com/morejust/waves-decode-tx">Source code</a>
+    ·
+made with love from <a href="https://morejust.foundation">Morejust</a>
+    
+    
+    
+</body>
